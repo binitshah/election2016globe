@@ -11,6 +11,24 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+var randomBool = (function() {
+  var a = new Uint8Array(1);
+  return function() {
+    crypto.getRandomValues(a);
+    return a[0] < 127;
+  };
+})();
+
+function calculate2dPosition(long, lat) {
+  var phi = (90 + long) * Math.PI / 180;
+  var theta = (180 - lat) * Math.PI / 180;
+
+  return {
+    x: phi,
+    y: theta
+  }
+}
+
 var DAT = DAT || {};
 
 DAT.Globe = function(container, opts) {
@@ -104,7 +122,7 @@ DAT.Globe = function(container, opts) {
     shader = Shaders['earth'];
     uniforms = THREE.UniformsUtils.clone(shader.uniforms);
 
-    uniforms['texture'].value = THREE.ImageUtils.loadTexture('world.jpg');
+    uniforms['texture'].value = THREE.ImageUtils.loadTexture('img/world.jpg');
 
     material = new THREE.ShaderMaterial({
 
@@ -165,61 +183,29 @@ DAT.Globe = function(container, opts) {
     }, false);
   }
 
-  function addData(data, opts) {
-    var lat, lng, size, color, i, step, colorFnWrapper;
+  function addData(latt, longt) {
+    this.is_animated = false;
 
-    opts.animated = opts.animated || false;
-    this.is_animated = opts.animated;
-    opts.format = opts.format || 'magnitude'; // other option is 'legend'
-    if (opts.format === 'magnitude') {
-      step = 3;
-      colorFnWrapper = function(data, i) { return colorFn(data[i+2]); }
-    } else if (opts.format === 'legend') {
-      step = 4;
-      colorFnWrapper = function(data, i) { return colorFn(data[i+3]); }
-    } else {
-      throw('error: format not supported: '+opts.format);
-    }
-
-    if (opts.animated) {
-      if (this._baseGeometry === undefined) {
-        this._baseGeometry = new THREE.Geometry();
-        for (i = 0; i < data.length; i += step) {
-          lat = data[i];
-          lng = data[i + 1];
-//        size = data[i + 2];
-          color = colorFnWrapper(data,i);
-          size = 0;
-          addPoint(lat, lng, size, color, this._baseGeometry);
-        }
-      }
-      if(this._morphTargetId === undefined) {
-        this._morphTargetId = 0;
-      } else {
-        this._morphTargetId += 1;
-      }
-      opts.name = opts.name || 'morphTarget'+this._morphTargetId;
-    }
     var subgeo = new THREE.Geometry();
-    for (i = 0; i < data.length; i += step) {
-      lat = data[i];
-      lng = data[i + 1];
-      color = colorFnWrapper(data,i);
-      size = data[i + 2];
-      size = size*200;
-      addPoint(lat, lng, size, color, subgeo);
+    var lat = latt;
+    var lng = longt;
+    var color = new THREE.Color( 0xffffff );
+    if(randomBool()){
+      var color = new THREE.Color( 0xff0000 );
     }
-    if (opts.animated) {
-      this._baseGeometry.morphTargets.push({'name': opts.name, vertices: subgeo.vertices});
-    } else {
-      this._baseGeometry = subgeo;
+    else{
+      var color = new THREE.Color( 0x0000ff );
     }
-
+    var size = 20;
+    addPoint(lat, lng, size, color, subgeo);
+    target = calculate2dPosition(longt, latt);
+    this._baseGeometry = subgeo;
   };
 
   function createPoints() {
     if (this._baseGeometry !== undefined) {
       if (this.is_animated === false) {
+        document.getElementById("loaderr").style.display = "none"; //hide loader
         this.points = new THREE.Mesh(this._baseGeometry, new THREE.MeshBasicMaterial({
               color: 0xffffff,
               vertexColors: THREE.FaceColors,
@@ -230,6 +216,7 @@ DAT.Globe = function(container, opts) {
           console.log('t l',this._baseGeometry.morphTargets.length);
           var padding = 8-this._baseGeometry.morphTargets.length;
           console.log('padding', padding);
+
           for(var i=0; i<=padding; i++) {
             console.log('padding',i);
             this._baseGeometry.morphTargets.push({'name': 'morphPadding'+i, vertices: this._baseGeometry.vertices});
@@ -256,7 +243,9 @@ DAT.Globe = function(container, opts) {
 
     point.lookAt(mesh.position);
 
-    point.scale.z = Math.max( size, 0.1 ); // avoid non-invertible matrix
+    point.scale.z = 0.1; // avoid non-invertible matrix
+    point.scale.x = 4;
+    point.scale.y = 4;
     point.updateMatrix();
 
     for (var i = 0; i < point.geometry.faces.length; i++) {
@@ -272,7 +261,7 @@ DAT.Globe = function(container, opts) {
 
   function onMouseDown(event) {
     event.preventDefault();
-
+    /*
     container.addEventListener('mousemove', onMouseMove, false);
     container.addEventListener('mouseup', onMouseUp, false);
     container.addEventListener('mouseout', onMouseOut, false);
@@ -283,10 +272,11 @@ DAT.Globe = function(container, opts) {
     targetOnDown.x = target.x;
     targetOnDown.y = target.y;
 
-    container.style.cursor = 'move';
+    container.style.cursor = 'move';*/
   }
 
   function onMouseMove(event) {
+    /*
     mouse.x = - event.clientX;
     mouse.y = event.clientY;
 
@@ -296,20 +286,22 @@ DAT.Globe = function(container, opts) {
     target.y = targetOnDown.y + (mouse.y - mouseOnDown.y) * 0.005 * zoomDamp;
 
     target.y = target.y > PI_HALF ? PI_HALF : target.y;
-    target.y = target.y < - PI_HALF ? - PI_HALF : target.y;
+    target.y = target.y < - PI_HALF ? - PI_HALF : target.y;*/
   }
 
   function onMouseUp(event) {
+    /*
     container.removeEventListener('mousemove', onMouseMove, false);
     container.removeEventListener('mouseup', onMouseUp, false);
     container.removeEventListener('mouseout', onMouseOut, false);
-    container.style.cursor = 'auto';
+    container.style.cursor = 'auto';*/
   }
 
   function onMouseOut(event) {
+    /*
     container.removeEventListener('mousemove', onMouseMove, false);
     container.removeEventListener('mouseup', onMouseUp, false);
-    container.removeEventListener('mouseout', onMouseOut, false);
+    container.removeEventListener('mouseout', onMouseOut, false);*/
   }
 
   function onMouseWheel(event) {
@@ -365,6 +357,8 @@ DAT.Globe = function(container, opts) {
 
     renderer.render(scene, camera);
   }
+
+
 
   init();
   this.animate = animate;

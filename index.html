@@ -3,154 +3,67 @@
   <head>
     <title>WebGL Globe</title>
     <meta charset="utf-8">
-    <style type="text/css">
-      html {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        background: #000000 url(loading.gif) center center no-repeat;
-        color: #ffffff;
-        font-family: sans-serif;
-        font-size: 13px;
-        line-height: 20px;
-        height: 100%;
-      }
-
-      #info {
-
-        font-size: 11px;
-        position: absolute;
-        bottom: 5px;
-        background-color: rgba(0,0,0,0.8);
-        border-radius: 3px;
-        right: 10px;
-        padding: 10px;
-
-      }
-
-      #currentInfo {
-        width: 270px;
-        position: absolute;
-        left: 20px;
-        top: 63px;
-
-        background-color: rgba(0,0,0,0.2);
-
-        border-top: 1px solid rgba(255,255,255,0.4);
-        padding: 10px;
-      }
-
-      a {
-        color: #aaa;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-
-      .bull {
-        padding: 0 5px;
-        color: #555;
-      }
-
-      #title {
-        position: absolute;
-        top: 20px;
-        width: 270px;
-        left: 20px;
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 3px;
-        font: 20px Georgia;
-        padding: 10px;
-      }
-
-      .year {
-        font: 16px Georgia;
-        line-height: 26px;
-        height: 30px;
-        text-align: center;
-        float: left;
-        width: 90px;
-        color: rgba(255, 255, 255, 0.4);
-
-        cursor: pointer;
-        -webkit-transition: all 0.1s ease-out;
-      }
-
-      .year:hover, .year.active {
-        font-size: 23px;
-        color: #fff;
-      }
-
-      #ce span {
-        display: none;
-      }
-
-      #ce {
-        width: 107px;
-        height: 55px;
-        display: block;
-        position: absolute;
-        bottom: 15px;
-        left: 20px;
-        background: url(ce.png);
-      }
-
-
-    </style>
+    <link href="css/style.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:100,500' rel='stylesheet' type='text/css'>
   </head>
   <body>
 
   <div id="container"></div>
 
-  <div id="info">
-    <strong><a href="http://www.chromeexperiments.com/globe">WebGL Globe</a></strong> <span class="bull">&bull;</span> Created by the Google Data Arts Team <span class="bull">&bull;</span> Modified by Binit Shah <span class="bull">&bull;</span> Data acquired from Twitter Streaming API
-  </div>
-
   <div id="title">
-    Election 2016 Chatter
+    Live Twitter Feed
   </div>
 
-  <script type="text/javascript" src="third-party/Detector.js"></script>
-  <script type="text/javascript" src="third-party/three.min.js"></script>
-  <script type="text/javascript" src="third-party/Tween.js"></script>
-  <script type="text/javascript" src="globe.js"></script>
+  <div id="info">
+    Designed by <a href="http://binitshah.com" target="_blank">Binit Shah</a> and <a href="https://www.chromeexperiments.com/globe" target="_blank">Chrome Data Arts Team</a>.
+  </div>
+
+  <div id="tweet">
+    Tweet
+    <br>
+    <div id="tweettext" style="font-weight: 500; font-size: 14px;">
+      Connecting to Twitter Streaming API
+    </div>
+  </div>
+
+  <img id="loaderr" src="img/loading.gif" style="position: absolute;top:48%;left: 48%;" />
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/pubnub/3.6.3/pubnub.min.js"></script>
+  <script type="text/javascript" src="js/Detector.js"></script>
+  <script type="text/javascript" src="js/three.min.js"></script>
+  <script type="text/javascript" src="js/Tween.js"></script>
+  <script type="text/javascript" src="js/globe.js"></script>
   <script type="text/javascript">
 
     if(!Detector.webgl){
       Detector.addGetWebGLMessage();
     } else {
-
-      var years = ['1990','1995','2000'];
       var container = document.getElementById('container');
       var globe = new DAT.Globe(container);
 
       console.log(globe);
-      var i, tweens = [];
 
-      var xhr;
       TWEEN.start();
 
+      //HUGE THANKS TO https://www.pubnub.com/developers/realtime-data-streams/twitter-stream/
+      //So clutch
+      var pubnub = PUBNUB.init({
+        subscribe_key: 'sub-c-78806dd4-42a6-11e4-aed8-02ee2ddab7fe'
+      });
 
-      xhr = new XMLHttpRequest();
-      xhr.open('GET', 'data_coor.json', true);
-      xhr.onreadystatechange = function(e) {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            var data = JSON.parse(xhr.responseText);
-            window.data = data;
-            for (i=0;i<data.length;i++) {
-              globe.addData(data[i][1], {format: 'magnitude', name: data[i][0], animated: true});
-            }
-            globe.createPoints();
-            globe.animate();
-            document.body.style.backgroundImage = 'none'; // remove loading
+      pubnub.subscribe({
+        channel : 'pubnub-twitter',
+        message : function(tweet){
+
+          if(tweet.coordinates != null){
+              globe.addData(tweet.coordinates.coordinates[0], tweet.coordinates.coordinates[1]);
+              globe.createPoints();
+              globe.animate();
+              $('#tweettext').html(tweet.text + " - <b>" + tweet.user.name + "</b>");
           }
         }
-      };
-      xhr.send(null);
+      });
     }
 
   </script>

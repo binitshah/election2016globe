@@ -1,0 +1,55 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+  font-family: sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  height: 100%;
+}
+
+a {
+  color: #aaa;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.bull {
+  padding: 0 5px;
+  color: #555;
+}
+
+#title {
+  position: absolute;
+  top: 20px;
+  width: 270px;
+  left: 20px;
+  font: 25px Roboto, Georgia;
+  padding: 10px;
+}
+
+#tweet {
+  position: absolute;
+  top: 100px;
+  width: 270px;
+  left: 20px;
+  font: 20px Roboto, Georgia;
+  font-weight: 100;
+  padding: 10px;
+}
+
+#info {
+  position: absolute;
+  bottom: 0px;
+  width: 270px;
+  left: 0px;
+  font: 10px Roboto, Georgia;
+  font-weight: 400;
+  padding: 10px;
+}
